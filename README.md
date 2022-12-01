@@ -6,10 +6,10 @@ This is a bot that I made as a response to hearing one of my friends playing a g
 I wasn't really fond of.
 
 NanoBot looks through the game activity of whatever server they're in and detects what 
-I think is a "cringe" game. Nano will dm the user giving them a fair warning for next time.
+I think is a "cringe" game. Nano will dm the user giving them a stern warning for next time.
 
 This is really the only thing that the bot can do at this time but I'll probably have it do some
-useful stuff in the future. For now it just calls you cringe. Make of it what you will :P
+useful stuff in the future. For now it just calls you cringe. Make of that what you will :P
 
 ## Getting Started
 
@@ -28,7 +28,7 @@ token with your own bot's token.
 **If you're planning on making a repo with your token in your index file, make sure to set it to 'private'**
 
 You now have a bot!....kinda. There are tons of videos on how you can host the bot in your server and run it,
-I reccomend watching this video: 
+I recommend watching this video: 
 
 `https://youtu.be/1jtAWZK3Bbk`
 
