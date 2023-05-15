@@ -1,7 +1,7 @@
 const Discord = require("discord.js")
 const { Client, GatewayIntentBits } = require('discord.js');
 
-const TOKEN = "TOKENGOESHERE"
+const TOKEN = "TOKEN GOES HERE"
 
 const client = new Discord.Client({
     intents: [
@@ -30,12 +30,45 @@ client.on("messageCreate", (message) => {
         console.log("Something went wrong!")
     }
     const channel = message.channel;
-    if (message.content == "hi") {
-        message.reply("Hello!")
-    } else if (message.content == "detectHere") {
-        detectChannel = message.channel
-        detectGuild = client.guilds.cache.get(message.guild.id)
-        message.reply("Okay! I've updated the detect channel/guild for you!")
+
+    switch (message.content) {
+        case "hi":
+            message.reply("Hello!")
+        case "detectHere":
+            detectChannel = message.channel
+            detectGuild = client.guilds.cache.get(message.guild.id)
+            message.reply("Okay! I've updated the detect channel/guild for you!")
+        case "a":
+            const guild = client.guilds.cache.get(message.guild.id)
+            console.log(guild.members)
+            guild.members.addRole('1064374566564134922')
+            message.reply("Done!")
+        default:
+            break
+    }
+    
+    if (message.content.includes("-n add ")) {
+        var rolePT = message.content.replace("-n add ", "")
+        var role = message.guild.roles.cache.find(role => role.name === rolePT)
+        if (!role) {
+            message.reply("That role doesn't exist")
+            return
+        }
+        var member = message.guild.members.cache.find(member => member.id === message.author.id)
+        member.roles.add(role)
+        message.reply("Okay! I added the \"" + role.name + "\" role for you :)")
+    } else if (message.content.includes("-n remove ")) {
+        var rolePT = message.content.replace("-n remove ", "")
+        var role = message.guild.roles.cache.find(role => role.name === rolePT)
+        if (!role) {
+            message.reply("That role doesn't exist")
+            return
+        }
+        var member = message.guild.members.cache.find(member => member.id === message.author.id)
+        member.roles.remove(role)
+        message.reply("Okay! I removed the \"" + role.name + "\" role for you :)")
+    } else if (message.content.includes("-n")) {
+        message.reply("You messed up boy!")
     }
 })
 
