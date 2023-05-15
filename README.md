@@ -2,6 +2,7 @@
 
 ## Overview 
 
+<img src="/images/nano.gif"/>
 This is a bot that I made as a response to hearing one of my friends playing a game 
 I wasn't really fond of.
 
