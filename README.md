@@ -30,7 +30,7 @@ NOTE: If you plan to create a repository with your token in the index file, make
 Congratulations! You now have a bot. However, to run it, you need to host it on your server. To learn more about 
 how to host and run your bot, I recommend watching this video:
 
-`https://youtu.be/1jtAWZK3Bbk`
+https://youtu.be/1jtAWZK3Bbk
 
 ## Commands
 
