@@ -8,8 +8,9 @@ I wasn't really fond of.
 NanoBot looks through the game activity of whatever server they're in and detects what 
 I think is a "cringe" game. Nano will dm the user giving them a stern warning for next time.
 
-This is really the only thing that the bot can do at this time but I'll probably have it do some
-useful stuff in the future. For now it just calls you cringe. Make of that what you will :P
+But wait, there's more!
+
+NanoBot is able to detect messages and add/remove roles to any user in the server
 
 ## Getting Started
 
@@ -31,5 +32,15 @@ You now have a bot!....kinda. There are tons of videos on how you can host the b
 I recommend watching this video: 
 
 `https://youtu.be/1jtAWZK3Bbk`
+
+## Commands
+
+### -n add <role>
+
+Adds a role to the user
+
+### -n remove <role>
+
+Removes a role from a user
 
 
