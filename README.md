@@ -43,11 +43,11 @@ https://youtu.be/1jtAWZK3Bbk
 
 ## Commands
 
-### -n add <role>
+### -n add (role)
 
 Adds a role to the user
 
-### -n remove <role>
+### -n remove (role)
 
 Removes a role from a user
 
