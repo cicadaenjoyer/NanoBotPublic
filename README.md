@@ -23,6 +23,14 @@ in the same directory.
 Finally, you can install the necessary libraries by running the command `npm install discord.js dotenv openai`
 in the same directory.
 
+The dotenv library is used to read from .env files that store crucial information like API keys. In order for
+your bot to properly work, an env file must be made in the following format
+
+```
+API_KEY:"KEY GOES HERE"
+BOT_KEY:"OTHER KEY HERE"
+```
+
 Once completed, you can paste the index.js file containing the code and replace the placeholder token with your 
 bot's token.
 
