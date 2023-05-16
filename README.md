@@ -17,10 +17,10 @@ If this is your first time creating a Discord bot, you may want to begin by inst
 To start, you should install Node (specifically version 16). You can download it from this link: 
 https://nodejs.org/en/download/
 
-Next, create the directory where you want your bot to be located and run the command "npm install" 
+Next, create the directory where you want your bot to be located and run the command `npm install` 
 in the same directory.
 
-Finally, you can install the necessary libraries by running the command 'npm install discord.js dotenv openai'
+Finally, you can install the necessary libraries by running the command `npm install discord.js dotenv openai`
 in the same directory.
 
 Once completed, you can paste the index.js file containing the code and replace the placeholder token with your 
