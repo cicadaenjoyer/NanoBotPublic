@@ -1,7 +1,8 @@
+import dotenv from "dotenv"
+import { Configuration, OpenAIApi } from "openai"
+
 const Discord = require("discord.js")
 const { Client, GatewayIntentBits } = require('discord.js');
-
-const TOKEN = "TOKEN GOES HERE"
 
 const client = new Discord.Client({
     intents: [
@@ -11,6 +12,10 @@ const client = new Discord.Client({
         GatewayIntentBits.GuildPresences
     ]
 })
+
+const openai = new OpenAIApi(new Configuration({
+    apiKey: process.env.OPEN_API_KEY
+}))
 
 var midGames = ["umineko when they cry - question arcs", "umineko when they cry - answer arcs", "ys: memories of celceta"]
 var basedGames = ["ys origin", "final fantasy ix"]
@@ -23,7 +28,7 @@ client.on("ready", () => {
 var detectChannel = null
 var detectGuild = null
 
-client.on("messageCreate", (message) => {
+client.on("messageCreate", async (message) => {
     try {
         const guild = client.guilds.cache.get(message.guild.id); 
     } catch(TypeError) {
@@ -34,17 +39,35 @@ client.on("messageCreate", (message) => {
     switch (message.content) {
         case "hi":
             message.reply("Hello!")
+            return
         case "detectHere":
             detectChannel = message.channel
             detectGuild = client.guilds.cache.get(message.guild.id)
             message.reply("Okay! I've updated the detect channel/guild for you!")
+            return
         case "a":
             const guild = client.guilds.cache.get(message.guild.id)
             console.log(guild.members)
             guild.members.addRole('1064374566564134922')
             message.reply("Done!")
+            return 
         default:
             break
+    }
+    
+    try {
+        const response = await openai.createChatCompletion({
+            model: "gpt-3.5-turbo",
+            messages: [
+                {role: "system", content: "Nano is talking wit ChatGPT rn..."},
+                {role: "user", content: message.content}
+            ]
+        })
+
+        const content = response.data.choices[0].message
+        return message.reply(content)
+    } catch (e) {
+        return message.reply("ChatGPT errored out! Sorry!")
     }
     
     if (message.content.includes("-n add ")) {
@@ -57,6 +80,8 @@ client.on("messageCreate", (message) => {
         var member = message.guild.members.cache.find(member => member.id === message.author.id)
         member.roles.add(role)
         message.reply("Okay! I added the \"" + role.name + "\" role for you :)")
+    } else if (message.content.includes("-n addAll ")) {
+        message.reply("I'm working on it!")
     } else if (message.content.includes("-n remove ")) {
         var rolePT = message.content.replace("-n remove ", "")
         var role = message.guild.roles.cache.find(role => role.name === rolePT)
@@ -109,4 +134,4 @@ client.on("presenceUpdate", async(oldMember, newMember) => {
     }
 })
 
-client.login(TOKEN)
+client.login(process.env.BOT_TOKEN)
