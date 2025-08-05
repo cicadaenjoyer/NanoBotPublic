@@ -9,5 +9,9 @@
             "umineko when they cry - answer arcs",
             "ys: memories of celceta"
         ]
+    },
+    "CHANNEL_TYPES": {
+        "GUILD": 0,
+        "DM": 1
     }
 }

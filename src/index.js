@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { Client, GatewayIntentBits } from "discord.js";
+import { Client, GatewayIntentBits, Partials, ChannelType } from "discord.js";
 import { GoogleGenAI } from "@google/genai";
 import config from "./constants/config.json" with { type: "json" };
 import constants from "./constants/constants.json" with { type: "json" };
@@ -11,33 +11,29 @@ const client = new Client({
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildPresences
+    GatewayIntentBits.GuildPresences,
+    GatewayIntentBits.DirectMessages
+  ],
+  partials: [
+    Partials.Channel,
+    Partials.Message
   ]
 });
 const ai = new GoogleGenAI({});
 
-var userStatuses = {}
+var detectChannel = null;
+var detectGuild = null;
+var userStatuses = {};
 
 client.on("ready", () => {
     console.log(`Logged in as ${client.user.tag}`)
-})
-var detectChannel = null
-var detectGuild = null
+});
 
-client.on("messageCreate", async (message) => {
-    // check if new message is from the user; avoids infinite
-    // feedback loops
-    if (message.author.bot) return;
-
-    try {
-        const guild = client.guilds.cache.get(message.guild.id); 
-    } catch(TypeError) {
-        console.log("Something went wrong!")
-    }
-    const channel = message.channel;
-
-    // generating a response
-    const response = await ai.models.generateContent({
+/**
+ * Connects to Gemini to generate a response
+ */
+const generateResponse = async (message) => {
+    return await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: message.content,
         config: {
@@ -47,32 +43,65 @@ client.on("messageCreate", async (message) => {
             },
         }
     });
-    message.reply(response.text)
+};
 
-    if (message.content.includes("-n add ")) {
-        var rolePT = message.content.replace("-n add ", "")
-        var role = message.guild.roles.cache.find(role => role.name === rolePT)
-        if (!role) {
-            message.reply("That role doesn't exist")
-            return
-        }
-        var member = message.guild.members.cache.find(member => member.id === message.author.id)
-        member.roles.add(role)
-        message.reply("Okay! I added the \"" + role.name + "\" role for you :)")
-    } else if (message.content.includes("-n addAll ")) {
-        message.reply("I'm working on it!")
-    } else if (message.content.includes("-n remove ")) {
-        var rolePT = message.content.replace("-n remove ", "")
-        var role = message.guild.roles.cache.find(role => role.name === rolePT)
-        if (!role) {
-            message.reply("That role doesn't exist")
-            return
-        }
-        var member = message.guild.members.cache.find(member => member.id === message.author.id)
-        member.roles.remove(role)
-        message.reply("Okay! I removed the \"" + role.name + "\" role for you :)")
-    } else if (message.content.includes("-n")) {
-        message.reply("You messed up boy!")
+/**
+ * Replies to user message through DM or Servers.
+ *
+ * Handles role handling in servers.
+ */
+client.on("messageCreate", async (message) => {
+    // check if new message is from the user; avoids infinite
+    // feedback loops
+    if (message.author.bot) return;
+
+    // behaviour differs if chatting through DMS or a server
+    const channelType = message.channel.type;
+    switch (channelType) {
+        case constants.CHANNEL_TYPES.GUILD:
+
+            // only reply if Nano is mentioned in the DM
+            const reply = message.mentions.has(client.user);
+            if (reply) {
+                // Reserved keyword handling for bot commands
+                if (message.content.indexOf("/role") == 0) {
+                    if (message.content.includes("/role add")) { // give a role to a user
+                        var rolePT = message.content.replace("/role add ", "")
+                        var role = message.guild.roles.cache.find(role => role.name === rolePT)
+                        if (!role) {
+                            message.reply("That role doesn't exist")
+                            return
+                        }
+                        var member = message.guild.members.cache.find(member => member.id === message.author.id)
+                        member.roles.add(role)
+                        message.reply("Okay! I added the \"" + role.name + "\" role for you :)")
+                    } else if (message.content.includes("/role remove")) { // remove a role from a user
+                        var rolePT = message.content.replace("/role remove ", "")
+                        var role = message.guild.roles.cache.find(role => role.name === rolePT)
+                        if (!role) {
+                            message.reply("That role doesn't exist")
+                            return
+                        }
+                        var member = message.guild.members.cache.find(member => member.id === message.author.id)
+                        member.roles.remove(role)
+                        message.reply("Okay! I removed the \"" + role.name + "\" role for you :)")
+                    }
+                } else {
+                    // Generate a response by default
+                    const response = await generateResponse(message);
+                    message.reply(response.text);
+                }
+            }
+ 
+            break;
+        case constants.CHANNEL_TYPES.DM:
+            // generate a response
+            const response = await generateResponse(message);
+            message.reply(response.text);
+            break;
+        default:
+            console.error(`Channel type: ${channelType} unsupported.`);
+            break;
     }
 })
 
