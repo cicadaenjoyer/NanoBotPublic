@@ -113,8 +113,7 @@ client.on("messageCreate", async (message) => {
         case constants.CHANNEL_TYPES.DM:
             // Always reply to DMs using Gemini
             const response = await generateResponse(message);
-            const text = await response.response.text();
-            message.reply(text);
+            message.reply(response.text);
             break;
 
         default:
