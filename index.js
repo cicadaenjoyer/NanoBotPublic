@@ -1,21 +1,15 @@
-import dotenv from "dotenv"
-import { Configuration, OpenAIApi } from "openai"
+import dotenv from "dotenv";
+import { Client, GatewayIntentBits } from "discord.js";
+dotenv.config();
 
-const Discord = require("discord.js")
-const { Client, GatewayIntentBits } = require('discord.js');
-
-const client = new Discord.Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildPresences
-    ]
-})
-
-const openai = new OpenAIApi(new Configuration({
-    apiKey: process.env.OPEN_API_KEY
-}))
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildPresences
+  ]
+});
 
 var midGames = ["umineko when they cry - question arcs", "umineko when they cry - answer arcs", "ys: memories of celceta"]
 var basedGames = ["ys origin", "final fantasy ix"]
@@ -54,7 +48,7 @@ client.on("messageCreate", async (message) => {
         default:
             break
     }
-    
+
     try {
         const response = await openai.createChatCompletion({
             model: "gpt-3.5-turbo",
@@ -69,7 +63,7 @@ client.on("messageCreate", async (message) => {
     } catch (e) {
         return message.reply("ChatGPT errored out! Sorry!")
     }
-    
+
     if (message.content.includes("-n add ")) {
         var rolePT = message.content.replace("-n add ", "")
         var role = message.guild.roles.cache.find(role => role.name === rolePT)
@@ -97,6 +91,10 @@ client.on("messageCreate", async (message) => {
     }
 })
 
+/**
+ * Detects a user's activity status and DMs the user a witty comment
+ * depending on the game they're playing
+*/
 client.on("presenceUpdate", async(oldMember, newMember) => {
     if((detectGuild != null) && (detectChannel != null)) {
         const guild = detectGuild
@@ -134,4 +132,4 @@ client.on("presenceUpdate", async(oldMember, newMember) => {
     }
 })
 
-client.login(process.env.BOT_TOKEN)
+client.login(process.env.DISCORD_API_KEY)
