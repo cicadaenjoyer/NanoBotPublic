@@ -1,3 +1,13 @@
+/**
+ * Discord Bot with Gemini AI Integration.
+ *
+ * This bot connects to Discord and listens for messages and presence updates.
+ * It responds to direct mentions in both servers and DMs, handling simple 
+ * commands like role assignment, and uses Gemini to generate conversational replies.
+ * Additionally, it monitors user activity (e.g., games being played) and sends
+ * direct or channel-based responses based on specific triggers.
+ */
+
 import dotenv from "dotenv";
 import { Client, GatewayIntentBits, Partials, ChannelType } from "discord.js";
 import { GoogleGenAI } from "@google/genai";
@@ -6,6 +16,7 @@ import constants from "./constants/constants.json" with { type: "json" };
 
 dotenv.config();
 
+// Create a new Discord client with required intents and partials
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -19,18 +30,27 @@ const client = new Client({
     Partials.Message
   ]
 });
+
+// Initialize Gemini AI client
 const ai = new GoogleGenAI({});
 
+// Used for tracking presence updates
 var detectChannel = null;
 var detectGuild = null;
 var userStatuses = {};
 
 client.on("ready", () => {
-    console.log(`Logged in as ${client.user.tag}`)
+    console.log(`Logged in as ${client.user.tag}`);
 });
 
 /**
- * Connects to Gemini to generate a response
+ * Generates a response using Gemini based on the provided message.
+ *
+ * @async
+ * @function generateResponse
+ * @param {Object} message - The message object containing the content to process.
+ * @param {string} message.content - The content to send to the AI model.
+ * @returns {Promise<Object>} The AI-generated response.
  */
 const generateResponse = async (message) => {
     return await ai.models.generateContent({
@@ -45,105 +65,111 @@ const generateResponse = async (message) => {
     });
 };
 
-/**
- * Replies to user message through DM or Servers.
- *
- * Handles role handling in servers.
- */
+// Listens for new messages
 client.on("messageCreate", async (message) => {
-    // check if new message is from the user; avoids infinite
-    // feedback loops
+    // Ignore messages from bots to prevent loops
     if (message.author.bot) return;
 
-    // behaviour differs if chatting through DMS or a server
     const channelType = message.channel.type;
+
     switch (channelType) {
         case constants.CHANNEL_TYPES.GUILD:
-
-            // only reply if Nano is mentioned in the DM
+            // Only respond if the bot is directly mentioned
             const reply = message.mentions.has(client.user);
             if (reply) {
-                // Reserved keyword handling for bot commands
-                if (message.content.indexOf("/role") == 0) {
-                    if (message.content.includes("/role add")) { // give a role to a user
-                        var rolePT = message.content.replace("/role add ", "")
-                        var role = message.guild.roles.cache.find(role => role.name === rolePT)
+                // Handle role commands
+                if (message.content.indexOf("/role") === 0) {
+                    if (message.content.includes("/role add")) {
+                        // Add a role to the user
+                        const rolePT = message.content.replace("/role add ", "");
+                        const role = message.guild.roles.cache.find(role => role.name === rolePT);
                         if (!role) {
-                            message.reply("That role doesn't exist")
-                            return
+                            message.reply("That role doesn't exist");
+                            return;
                         }
-                        var member = message.guild.members.cache.find(member => member.id === message.author.id)
-                        member.roles.add(role)
-                        message.reply("Okay! I added the \"" + role.name + "\" role for you :)")
-                    } else if (message.content.includes("/role remove")) { // remove a role from a user
-                        var rolePT = message.content.replace("/role remove ", "")
-                        var role = message.guild.roles.cache.find(role => role.name === rolePT)
+                        const member = message.guild.members.cache.find(member => member.id === message.author.id);
+                        member.roles.add(role);
+                        message.reply(`Okay! I added the "${role.name}" role for you :)`);
+                    } else if (message.content.includes("/role remove")) {
+                        // Remove a role from the user
+                        const rolePT = message.content.replace("/role remove ", "");
+                        const role = message.guild.roles.cache.find(role => role.name === rolePT);
                         if (!role) {
-                            message.reply("That role doesn't exist")
-                            return
+                            message.reply("That role doesn't exist");
+                            return;
                         }
-                        var member = message.guild.members.cache.find(member => member.id === message.author.id)
-                        member.roles.remove(role)
-                        message.reply("Okay! I removed the \"" + role.name + "\" role for you :)")
+                        const member = message.guild.members.cache.find(member => member.id === message.author.id);
+                        member.roles.remove(role);
+                        message.reply(`Okay! I removed the "${role.name}" role for you :)`);
                     }
                 } else {
-                    // Generate a response by default
+                    // No command? Just generate an AI reply
                     const response = await generateResponse(message);
                     message.reply(response.text);
                 }
             }
- 
             break;
+
         case constants.CHANNEL_TYPES.DM:
-            // generate a response
+            // Always reply to DMs using Gemini
             const response = await generateResponse(message);
-            message.reply(response.text);
+            const text = await response.response.text();
+            message.reply(text);
             break;
+
         default:
             console.error(`Channel type: ${channelType} unsupported.`);
             break;
     }
-})
+});
 
 /**
- * Detects a user's activity status and DMs the user a witty comment
- * depending on the game they're playing
-*/
-client.on("presenceUpdate", async(oldMember, newMember) => {
-    if((detectGuild != null) && (detectChannel != null)) {
-        const guild = detectGuild
-        const channel = detectChannel
-        const member = newMember.member
+ * Detects user activity changes and sends witty responses based on
+ * what game they are playing.
+ *
+ * Triggers when users start playing certain games marked as "MID" or "BASED".
+ */
+client.on("presenceUpdate", async (oldMember, newMember) => {
+    const member = newMember.member;
 
-        if (member.user.bot == false) {
-            try { 
-                if (member.guild = guild) {
-                    const game = newMember.member.presence.activities[0].name.toLowerCase();
-                    if(constants.GAMES.MID.includes(game)) {
-                        if(userStatuses[member] == undefined) {
+    // Send presence updates to a designated guild/channel if set
+    if ((detectGuild != null) && (detectChannel != null)) {
+        const guild = detectGuild;
+        const channel = detectChannel;
+
+        if (!member.user.bot) {
+            try {
+                if (member.guild === guild) {
+                    const game = member.presence.activities[0].name.toLowerCase();
+                    if (constants.GAMES.MID.includes(game)) {
+                        if (userStatuses[member] === undefined) {
                             userStatuses[member] = ["", [0, 0]];
                             channel.send(`User <@${member.id}> is playing mid. Ban this man!`);
                         }
                     }
                 }
             } catch (error) {
-                userStatuses[member] = "Not Playing"
+                userStatuses[member] = "Not Playing";
             }
         }
     }
-    const member = newMember.member
-    const game = newMember.member.presence.activities[0].name.toLowerCase();
-    if(constants.GAMES.MID.includes(game)) {
-        if(userStatuses[member] == undefined) {
+
+    // DM users directly based on the game they're playing
+    const game = member.presence.activities[0]?.name?.toLowerCase();
+    if (!game) return;
+
+    if (constants.GAMES.MID.includes(game)) {
+        if (userStatuses[member] === undefined) {
             userStatuses[member] = ["", [0, 0]];
-            member.user.send(`<@${member.id}> I see you're playing mid... Consider this a warning!`)
+            member.user.send(`<@${member.id}> I see you're playing mid... Consider this a warning!`);
         }
     } else if (constants.GAMES.BASED.includes(game)) {
-        if(userStatuses[member] == undefined) {
+        if (userStatuses[member] === undefined) {
             userStatuses[member] = ["", [0, 0]];
-            member.user.send(`You're playing <${game}>? Based.`)
+            member.user.send(`You're playing <${game}>? Based.`);
         }
     }
-})
+});
 
-client.login(process.env.DISCORD_API_KEY)
+// Login to Discord with bot token
+client.login(process.env.DISCORD_API_KEY);
