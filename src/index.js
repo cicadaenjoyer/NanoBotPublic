@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { Client, GatewayIntentBits } from "discord.js";
 import { GoogleGenAI } from "@google/genai";
-import config from "./config.json" with { type: "json" };
+import config from "./constants/config.json" with { type: "json" };
 dotenv.config();
 
 const client = new Client({

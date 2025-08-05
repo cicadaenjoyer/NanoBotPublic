@@ -2,7 +2,7 @@
 
 ## Overview 
 
-<img src="/images/nano.gif"/>
+<img src="src/assets/images/nano.gif"/>
 
 I created this bot in response to overhearing one of my friends playing a game that I didn't particularly like. 
 NanoBot scans the gaming activities of the server that they're in and identifies what I consider to be a 'cringe' 
