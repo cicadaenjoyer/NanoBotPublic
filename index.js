@@ -1,5 +1,7 @@
 import dotenv from "dotenv";
 import { Client, GatewayIntentBits } from "discord.js";
+import { GoogleGenAI } from "@google/genai";
+import config from "./config.json" with { type: "json" };
 dotenv.config();
 
 const client = new Client({
@@ -10,6 +12,7 @@ const client = new Client({
     GatewayIntentBits.GuildPresences
   ]
 });
+const ai = new GoogleGenAI({});
 
 var midGames = ["umineko when they cry - question arcs", "umineko when they cry - answer arcs", "ys: memories of celceta"]
 var basedGames = ["ys origin", "final fantasy ix"]
@@ -23,6 +26,10 @@ var detectChannel = null
 var detectGuild = null
 
 client.on("messageCreate", async (message) => {
+    // check if new message is from the user; avoids infinite
+    // feedback loops
+    if (message.author.bot) return;
+
     try {
         const guild = client.guilds.cache.get(message.guild.id); 
     } catch(TypeError) {
@@ -30,39 +37,18 @@ client.on("messageCreate", async (message) => {
     }
     const channel = message.channel;
 
-    switch (message.content) {
-        case "hi":
-            message.reply("Hello!")
-            return
-        case "detectHere":
-            detectChannel = message.channel
-            detectGuild = client.guilds.cache.get(message.guild.id)
-            message.reply("Okay! I've updated the detect channel/guild for you!")
-            return
-        case "a":
-            const guild = client.guilds.cache.get(message.guild.id)
-            console.log(guild.members)
-            guild.members.addRole('1064374566564134922')
-            message.reply("Done!")
-            return 
-        default:
-            break
-    }
-
-    try {
-        const response = await openai.createChatCompletion({
-            model: "gpt-3.5-turbo",
-            messages: [
-                {role: "system", content: "Nano is talking wit ChatGPT rn..."},
-                {role: "user", content: message.content}
-            ]
-        })
-
-        const content = response.data.choices[0].message
-        return message.reply(content)
-    } catch (e) {
-        return message.reply("ChatGPT errored out! Sorry!")
-    }
+    // generating a response
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: message.content,
+        config: {
+            systemInstruction: config.PERSONALITY,
+            thinkingConfig: {
+                thinkingBudget: 0,
+            },
+        }
+    });
+    message.reply(response.text)
 
     if (message.content.includes("-n add ")) {
         var rolePT = message.content.replace("-n add ", "")
