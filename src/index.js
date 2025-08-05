@@ -2,6 +2,8 @@ import dotenv from "dotenv";
 import { Client, GatewayIntentBits } from "discord.js";
 import { GoogleGenAI } from "@google/genai";
 import config from "./constants/config.json" with { type: "json" };
+import constants from "./constants/constants.json" with { type: "json" };
+
 dotenv.config();
 
 const client = new Client({
@@ -14,10 +16,7 @@ const client = new Client({
 });
 const ai = new GoogleGenAI({});
 
-var midGames = ["umineko when they cry - question arcs", "umineko when they cry - answer arcs", "ys: memories of celceta"]
-var basedGames = ["ys origin", "final fantasy ix"]
-
-var statuses = {}
+var userStatuses = {}
 
 client.on("ready", () => {
     console.log(`Logged in as ${client.user.tag}`)
@@ -91,28 +90,28 @@ client.on("presenceUpdate", async(oldMember, newMember) => {
             try { 
                 if (member.guild = guild) {
                     const game = newMember.member.presence.activities[0].name.toLowerCase();
-                    if(midGames.includes(game)) {
-                        if(statuses[member] == undefined) {
-                            statuses[member] = ["", [0, 0]];
+                    if(constants.GAMES.MID.includes(game)) {
+                        if(userStatuses[member] == undefined) {
+                            userStatuses[member] = ["", [0, 0]];
                             channel.send(`User <@${member.id}> is playing mid. Ban this man!`);
                         }
                     }
                 }
             } catch (error) {
-                statuses[member] = "Not Playing"
+                userStatuses[member] = "Not Playing"
             }
         }
     }
     const member = newMember.member
     const game = newMember.member.presence.activities[0].name.toLowerCase();
-    if(midGames.includes(game)) {
-        if(statuses[member] == undefined) {
-            statuses[member] = ["", [0, 0]];
+    if(constants.GAMES.MID.includes(game)) {
+        if(userStatuses[member] == undefined) {
+            userStatuses[member] = ["", [0, 0]];
             member.user.send(`<@${member.id}> I see you're playing mid... Consider this a warning!`)
         }
-    } else if (basedGames.includes(game)) {
-        if(statuses[member] == undefined) {
-            statuses[member] = ["", [0, 0]];
+    } else if (constants.GAMES.BASED.includes(game)) {
+        if(userStatuses[member] == undefined) {
+            userStatuses[member] = ["", [0, 0]];
             member.user.send(`You're playing <${game}>? Based.`)
         }
     }
