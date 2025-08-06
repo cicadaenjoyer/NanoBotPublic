@@ -32,5 +32,3 @@ Adds a role to the user
 ### /role remove (role)
 
 Removes a role from a user
-
-
